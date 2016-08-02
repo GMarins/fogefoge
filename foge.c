@@ -3,10 +3,12 @@
 #include <time.h>
 #include "mapa.h"
 #include "foge.h"
+#include "ui.h"
 
 
 MAPA mp;
 POSICAO heroi;
+int tempilula = 0;
 
 int praondefantasmavai(int xatual, int yatual, int* xdestino, int* ydestino)
 {
@@ -57,11 +59,14 @@ void fantasmas()
     libera_mapa(&copia);
 }
 
-int acabou()
-{
-    POSICAO pos;
-    int fogefogenomapa = encontra_mapa(&mp, &pos, HEROI);
-    return !fogefogenomapa;
+int acabou() {
+	POSICAO pos;
+
+	int perdeu = !encontra_mapa(&mp, &pos, HEROI);
+	int ganhou = !encontra_mapa(&mp, &pos, FANTASMA);
+
+	return ganhou || perdeu;
+
 }
 
 int direcaovalida(char direcao)
@@ -98,10 +103,37 @@ void move(char direcao)
 
 
     if(!podeandar(&mp,proximox,proximoy,HEROI)) return;
+    if(ehpersonagem(&mp, proximox,proximoy, PILULA)) tempilula = 1;
 
     atualizapersonagem(&mp, heroi.x,heroi.y, proximox,proximoy);
     heroi.x = proximox;
     heroi.y = proximoy;
+
+}
+
+void explodepilula() //Explode nas 4 direções
+{
+  if(!tempilula) return;
+  explodepilulaaux(heroi.x,heroi.y,0,1,3);
+  explodepilulaaux(heroi.x,heroi.y,1,0,3);
+  explodepilulaaux(heroi.x,heroi.y,-1,0,3);
+  explodepilulaaux(heroi.x,heroi.y,0,-1,3);
+
+  tempilula = 0;
+}
+
+void explodepilulaaux(int x, int y, int somax, int somay, int qtd ) //explode na direção (somax,somay)
+{
+
+    if (qtd == 0) return;
+    int novox = x + somax;
+    int novoy = y + somay;
+
+    if(!movvalido(&mp,novox,novoy)) return;
+    if(ehparede(&mp,novox,novoy)) return;
+
+    mp.matriz[novox][novoy] = VAZIO;
+    explodepilulaaux(novox,novoy, somax, somay, qtd - 1);
 
 }
 
@@ -113,19 +145,19 @@ int main()
 
     do
     {
+         printf("Tem Pilula: %s\n", (tempilula ? "SIM" : "NAO"));
          print_mapa(&mp);
          char comando;
          scanf(" %c",&comando);
-         move(comando);
+         if(direcaovalida(comando))  move(comando);
+
+         if(comando == BOMBA) explodepilula();
+
          fantasmas();
     }while(!acabou());
 
-
-
-
-
     libera_mapa(&mp);
-
+    printf("\n\n\nGAME OVER\n\n\n");
     system("pause");
     return 0;
 }

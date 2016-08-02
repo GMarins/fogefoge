@@ -92,15 +92,7 @@ void aloca_mapa(MAPA* mp)
 
 }
 
-void print_mapa(MAPA* mp)
-{
 
-   for(int i = 0; i < mp->linhas; i++)
-   {
-       printf("%s\n",  mp->matriz[i]);
-   }
-
-}
 
 void le_mapa(MAPA* mp)
 {
